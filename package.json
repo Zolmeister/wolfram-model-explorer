@@ -1,0 +1,27 @@
+{
+  "name": "graph-game",
+  "version": "0.0.0",
+  "main": "index.js",
+  "author": "Zolmeister <zolikahan@gmail.com>",
+  "scripts": {
+    "dev": "webpack-dev-server --open --config webpack.config.cjs",
+    "watch": "ava --watch --verbose"
+  },
+  "type": "module",
+  "devDependencies": {
+    "ava": "^3.8.2",
+    "clean-webpack-plugin": "^3.0.0",
+    "css-loader": "^3.5.3",
+    "d3": "^5.16.0",
+    "d3-scale": "^3.2.1",
+    "eslint": "^7.1.0",
+    "style-loader": "^1.2.1",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.11.0"
+  },
+  "dependencies": {
+    "3d-force-graph": "^1.63.0",
+    "fast-json-stable-stringify": "^2.1.0"
+  }
+}
