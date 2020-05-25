@@ -1,17 +1,18 @@
 {
   "name": "wolfram-model-explorer",
   "version": "0.0.0",
-  "main": "index.js",
   "author": "Zolmeister <zolikahan@gmail.com>",
   "scripts": {
     "dev": "webpack-dev-server --open --config webpack.config.cjs",
-    "watch": "ava --watch --verbose"
+    "watch": "ava --watch --verbose",
+    "dist": "webpack --config webpack.config.cjs --mode production"
   },
   "type": "module",
   "devDependencies": {
     "ava": "^3.8.2",
     "css-loader": "^3.5.3",
     "eslint": "^7.1.0",
+    "html-webpack-plugin": "^4.3.0",
     "style-loader": "^1.2.1",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
