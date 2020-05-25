@@ -3,11 +3,10 @@ import stringify from 'fast-json-stable-stringify'
 
 export const Tuple = _.memoize(_.identity, (...args) => stringify(args))
 
-export const Pattern = (matchTuples, closedTuples = [], usedIds = new Set()) =>
+export const Pattern = (matchTuples, closedTuples = []) =>
   ({
     matchTuples,
     closedTuples,
-    usedIds
   })
 
 // TODO: wrap 'set' to hypergraph (?) -> {set, index, maxId}
@@ -21,8 +20,7 @@ export const match = (set, pattern) => {
   // TODO: extend with filter (with inverted index by id)
   //   if (nextTupleHasRealValue)
   //     filtered = set.filter(nextRealValue)
-  for (const setTuple of set.values()) {
-    const tempUsedIds = new Set()
+  for (const setTuple of set) {
     const tempIdMap = {}
 
     let failed = false
@@ -31,8 +29,7 @@ export const match = (set, pattern) => {
 
       if (a === b) {
         continue
-      } else if (b < 0 && !pattern.usedIds.has(a) && !tempUsedIds.has(a)) {
-        tempUsedIds.add(a)
+      } else if (b < 0) {
         tempIdMap[b] = a
         continue
       } else {
@@ -45,11 +42,12 @@ export const match = (set, pattern) => {
       const nextPattern = Pattern(
         pattern.matchTuples.map(tuple =>
           Tuple(tuple.map(x => tempIdMap[x] || x))).slice(1),
-        pattern.closedTuples.concat([setTuple]),
-        new Set([...pattern.usedIds, ...tempUsedIds])
+        pattern.closedTuples.concat([setTuple])
       )
 
-      const nextMatch = match(set, nextPattern)
+      const newSet = set.slice()
+      newSet.splice(set.indexOf(setTuple), 1)
+      const nextMatch = match(newSet, nextPattern)
       if (nextMatch) {
         return nextMatch
       }
@@ -60,18 +58,17 @@ export const match = (set, pattern) => {
 }
 
 export const matchAll = (set, pattern) => {
-  const usedIds = new Set()
   const results = []
 
   for(;;) {
     const matched = match(set, pattern)
     if (matched) {
       results.push(matched)
-      for (const id of _.uniq(matched.flat())) {
-        usedIds.add(id)
+      const newSet = set.slice()
+      for (const setTuple of matched) {
+        newSet.splice(set.indexOf(setTuple), 1)
       }
-      // TODO: removed matched from set instead?
-      pattern = Pattern(pattern.matchTuples, pattern.closedTuples, usedIds)
+      set = newSet
     } else {
       break
     }
@@ -82,7 +79,7 @@ export const matchAll = (set, pattern) => {
 
 export const replace = (set, match, model) => {
   // TODO: track nextId in hypergraph
-  let nextId = _.max([...set].flat()) + 1
+  let nextId = _.max(set.flat()) + 1
   const replacementMap = Object.fromEntries(_.zip(model.matchTuples.flat(), match.flat()))
   const replacementTuples = model.replacementTuples.map(tuple =>
     tuple.map(x =>
@@ -90,12 +87,13 @@ export const replace = (set, match, model) => {
     )
   )
 
-  const newSet = new Set(set)
+  const newSet = set.slice()
+
   for (const tuple of match) {
-    newSet.delete(tuple)
+    newSet.splice(newSet.indexOf(tuple), 1)
   }
   for (const tuple of replacementTuples) {
-    newSet.add(tuple)
+    newSet.push(tuple)
   }
 
   return newSet

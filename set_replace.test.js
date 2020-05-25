@@ -1,8 +1,8 @@
 import test from 'ava'
 
-import {Tuple, Pattern, Model, match, replace, evolve} from './src/set_replace.js'
+import {Tuple, Pattern, Model, match, replace, matchAll, evolve} from './src/set_replace.js'
 
-const m1172 = '{{{1, 2}, {2, 3}} -> {{4, 2}, {2, 1}, {1, 4}, {4, 3}}}'
+const m7992 = '{{{1, 2}, {2, 3}} -> {{4, 2}, {2, 1}, {1, 4}, {4, 3}}}'
 const m1194 = '{{{1, 1, 2}} -> {{3, 3, 1}, {2, 1, 1}}}'
 
 test('Tuple', t => {
@@ -13,13 +13,13 @@ test('Tuple', t => {
 })
 
 test('Model', t => {
-	const {matchTuples, replacementTuples} = Model(m1172)
+	const {matchTuples, replacementTuples} = Model(m7992)
 	t.deepEqual(matchTuples, [Tuple([-1, -2]), Tuple([-2, -3])])
 	t.deepEqual(replacementTuples, [Tuple([-4, -2]), Tuple([-2, -1]), Tuple([-1, -4]), Tuple([-4, -3])])
 })
 
 test('match', t => {
-	const pattern = Pattern(Model(m1172).matchTuples)
+	const pattern = Pattern(Model(m7992).matchTuples)
 	const aa = Tuple([9, 9])
 	const ab = Tuple([9, 8])
 	const bc = Tuple([8, 7])
@@ -47,15 +47,29 @@ test('replace', t => {
 	const replaced = replace(
 		set,
 		[Tuple([9, 8]), Tuple([8, 7])],
-		Model(m1172)
+		Model(m7992)
 	)
 
 	t.deepEqual(replaced, new Set([Tuple([10, 8]), Tuple([8, 9]), Tuple([9, 10]), Tuple([10, 7])]))
 })
 
+test('matchAll', t => {
+	const pattern = Pattern(Model(m7992).matchTuples)
+	const aa = Tuple([9, 9])
+	const ab = Tuple([9, 8])
+	const bc = Tuple([8, 7])
+	const cb = Tuple([7, 8])
+	const de = Tuple([6, 5])
+	const ef = Tuple([5, 4])
+
+	t.deepEqual(matchAll(new Set([aa, ab, cb]), pattern), [])
+	t.deepEqual(matchAll(new Set([aa, ab, bc, de, ef]), pattern), [[ab, bc], [de, ef]])
+})
+
 test('evolve', t => {
-	t.deepEqual(evolve(Model(m1172), 1),
+	const initialSet = Model(m7992).matchTuples.map(tuple => Tuple(tuple.map(n => -n)))
+	t.deepEqual(evolve(Model(m7992), initialSet, 1),
 		new Set([Tuple([4, 2]), Tuple([2, 1]), Tuple([1, 4]), Tuple([4, 3])]))
-	t.deepEqual(evolve(Model(m1172), 2),
+	t.deepEqual(evolve(Model(m7992), initialSet, 2),
 		new Set([Tuple([1, 4]), Tuple([4, 3]), Tuple([5, 2]), Tuple([2, 4]), Tuple([4, 5]), Tuple([5, 1])]))
 })
