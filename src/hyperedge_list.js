@@ -108,6 +108,10 @@ export const Model = (str) => {
         Tuple(tuple.map(n => -n)))
     )
 
+  if (parsed.length > 2) {
+    throw new Error('Compound Models not supported')
+  }
+
   return {
     matchTuples: parsed[0],
     replacementTuples: parsed[1]
