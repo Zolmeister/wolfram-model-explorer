@@ -22,6 +22,12 @@ body {
   font-size: 64px;
 }
 
+#code::before {
+  content: 'wm';
+  font-size: 24px;
+  vertical-align: text-top;
+}
+
 #steps {
   font-size: 32px;
   margin-top: 12px;
@@ -38,4 +44,49 @@ body {
 
 #code:active, #steps:active {
   background: rgba(255, 255, 255, 0.15);
+}
+
+#rule {
+  position: absolute;
+  white-space: nowrap;
+  margin-top: 12px;
+  padding: 6px 24px;
+}
+
+#vr {
+  color: rgba(255, 255, 255, 0.4);
+  font-family: monospace, sans-serif;
+  border-radius: 3px;
+  padding: 8px 16px;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 99999;
+  margin: 20px;
+  font-weight: bold;
+}
+
+#vr:hover {
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+              0 1px 5px 0 rgba(0, 0, 0, 0.12),
+              0 3px 1px -2px rgba(0, 0, 0, 0.2);
+}
+
+#vr:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+#vr.selected {
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(0, 0, 0, 0.86);
+}
+
+.a-enter-vr {
+  display: none;
+}
+
+#graph-vr {
+  display: none;
 }
