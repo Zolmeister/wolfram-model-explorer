@@ -1,5 +1,6 @@
 body {
   margin: 0;
+  overflow: hidden;
 }
 
 #meta {
@@ -62,7 +63,7 @@ body {
   bottom: 0;
   right: 0;
   z-index: 99999;
-  margin: 20px;
+  margin: 16px;
   font-weight: bold;
 }
 
@@ -89,4 +90,19 @@ body {
 
 #graph-vr {
   display: none;
+}
+
+#source {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  color: rgba(255, 255, 255, 0.4);
+  z-index: 99999;
+  margin: 24px;
+  text-decoration: none;
+  font-family: monospace, sans-serif;
+}
+
+#source:hover {
+  text-decoration: underline;
 }

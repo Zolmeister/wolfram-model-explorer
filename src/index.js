@@ -24,7 +24,6 @@ const ruleFromQuery = (rule) =>
 const randomRule = () =>
   WolframModels[codes[Math.floor(Math.random() * (codes.length - 1))]]
 
-// TODO: link to github
 // TODO: support multi-pattern models like 1695, 4967
 let rule = randomRule()
 let steps = 5
