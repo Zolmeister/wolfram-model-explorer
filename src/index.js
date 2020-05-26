@@ -154,6 +154,8 @@ window.onpopstate = () => {
 
 window.addEventListener('resize', _.debounce(() => {
   forceGraph3D.height(window.innerHeight)
+  forceGraph3D.width(window.innerWidth)
+  forceGraphVR.height(window.innerHeight)
   forceGraphVR.width(window.innerWidth)
 }, 100))
 
