@@ -1,13 +1,6 @@
 import _ from 'lodash'
-import stringify from 'fast-json-stable-stringify'
 
-export const Tuple = _.memoize(_.identity, (...args) => stringify(args))
-
-export const Pattern = (matchTuples, closedTuples = []) =>
-  ({
-    matchTuples,
-    closedTuples,
-  })
+import {Tuple, Pattern} from './primitives.js'
 
 // TODO: wrap 'set' to hypergraph (?) -> {set, index, maxId}
 export const match = (set, pattern) => {
@@ -97,25 +90,6 @@ export const replace = (set, match, model) => {
   }
 
   return newSet
-}
-
-//   TODO: sort matchTuples by most-valuable match first
-//     e.g. [(-1, -2), (-2, -3), (-2, -2)] -> [(-2, -3), (-1, -2), (-2, -2)]
-export const Model = (str) => {
-  const parsed = JSON.parse(str.replace(/{/g, '[').replace(/}/g, ']').replace(/->/g, ','))
-    .map(sets =>
-      sets.map(tuple =>
-        Tuple(tuple.map(n => -n)))
-    )
-
-  if (parsed.length > 2) {
-    throw new Error('Compound Models not supported')
-  }
-
-  return {
-    matchTuples: parsed[0],
-    replacementTuples: parsed[1]
-  }
 }
 
 export const evolve = (model, initialSet, t) => {

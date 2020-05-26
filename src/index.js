@@ -3,33 +3,46 @@ import ForceGraph3D from '3d-force-graph'
 import ForceGraphVR from '3d-force-graph-vr'
 
 // import {Model, Tuple, evolve} from './set_replace'
-import {Model, Tuple, evolve} from './hyperedge_list'
+import {Tuple, listFromStr, modelFromStr, listToString, ruleFromStr} from './primitives'
+import {evolve} from './hyperedge_list'
 import WolframModels from './wolfram_models'
 
 import './index.css'
 
-// XXX: Because multi-pattern models not supported
+// TODO: support multi-pattern models like 1695, 4967
+// TODO: support single-element models like 225, 833
 const codes = Object.keys(WolframModels).filter(code => {
   try {
-    Model(WolframModels[code])
+    modelFromStr(WolframModels[code])
     return true
   } catch {
     return false
   }
 })
 
-const ruleToCode = _.invert(WolframModels)
-const ruleFromQuery = (rule) =>
-  rule.replace(/\s/g, '').replace(/,/g, ', ').replace(/->/g, ' -> ')
 const randomRule = () =>
   WolframModels[codes[Math.floor(Math.random() * (codes.length - 1))]]
 
-// TODO: support multi-pattern models like 1695, 4967
-let rule = randomRule()
-let steps = 5
+const ruleToCode = _.invert(WolframModels)
 
-const createForceGraph = (isVR) =>
-  (isVR ? ForceGraphVR : ForceGraph3D)()(document.getElementById(isVR ? 'graph-vr' : 'graph-3d'))
+// {1, 2, 3} -> {1, 1, 1}
+const initialListFromRule = (rule) =>
+  modelFromStr(rule).matchTuples.map(tuple => Tuple(tuple.map(() => 1)))
+
+const initialStateFromQuery = (urlParams) =>
+  ({
+    rule: urlParams.get('rule') ? ruleFromStr(urlParams.get('rule')) : undefined,
+    initialList: urlParams.get('init') ? listFromStr(urlParams.get('init')) : undefined,
+    steps: urlParams.get('steps') ? parseInt(urlParams.get('steps'), 10) : undefined
+  })
+
+const stateToQueryString = ({rule, initialList, steps}) =>
+  '?rule=' + rule.replace(/\s/g, '') +
+  '&init=' + listToString(initialList ? initialList : initialListFromRule(rule)).replace(/\s/g, '') +
+  '&steps=' + steps
+
+const createForceGraph = (constructor, id) =>
+  constructor()(document.getElementById(id))
     .backgroundColor('#121212')
     .nodeColor(() => '#81D4FA')
     .linkColor(() => '#E1F5FE')
@@ -38,14 +51,13 @@ const createForceGraph = (isVR) =>
     .linkCurvature('curvature')
     .linkCurveRotation('rotation')
 
-const forceGraph3D = createForceGraph(false)
-const forceGraphVR = createForceGraph(true)
-let forceGraph = forceGraph3D
+const forceGraph3D = createForceGraph(ForceGraph3D, 'graph-3d')
+const forceGraphVR = createForceGraph(ForceGraphVR, 'graph-vr')
 
-const draw = (forceGraph, rule, steps) => {
-  const model = Model(rule)
-  const initialSet = model.matchTuples.map(tuple => Tuple(tuple.map(() => 1)))
-  const set = evolve(model, initialSet, steps)
+// TODO: show hyperedges
+const draw = ({rule, initialList, steps, forceGraph}) => {
+  initialList = initialList ? initialList : initialListFromRule(rule)
+  const set = evolve(modelFromStr(rule), initialList, steps - 1)
 
   const links = set.map((tuple) => {
     const links = []
@@ -101,29 +113,38 @@ const draw = (forceGraph, rule, steps) => {
   console.log('set', set)
   console.log('gData', gData)
 
-  // TODO: show hyperedges
   forceGraph
     .graphData(gData)
 
   document.getElementById('code').innerText = ruleToCode[rule]
   document.getElementById('code').style.display = ruleToCode[rule] ? 'block' : 'none'
-  document.getElementById('rule').innerText = rule
-  document.getElementById('steps').innerText = steps + 1 + ' steps'
+  document.getElementById('steps').innerText = steps + ' steps'
+  document.getElementById('rule').innerText = 'rule ' + rule
+  document.getElementById('init').innerText = 'init ' + listToString(initialList)
 }
 
 document.getElementById('code').addEventListener('click', () => {
-  draw(forceGraph, rule = randomRule(), steps = 5)
-  window.history.pushState('', '', '?rule=' + rule.replace(/\s/g, ''))
+  state = _.defaults({
+    rule: randomRule(),
+    initialList: null,
+    steps: 6
+  }, state)
+  draw(state)
+  window.history.pushState('', '', stateToQueryString(state))
 })
 
 document.getElementById('steps').addEventListener('click', () => {
-  draw(forceGraph, rule, ++steps)
+  state = _.defaults({steps: state.steps + 1}, state)
+  draw(state)
+  window.history.replaceState('', '', stateToQueryString(state))
 })
 
 document.getElementById('vr').addEventListener('click', () => {
-  const isVR = forceGraph !== forceGraphVR // toggle
-  forceGraph = isVR ? forceGraphVR : forceGraph3D
-  draw(forceGraph, rule, steps)
+  const isVR = state.forceGraph !== forceGraphVR // toggle
+  state = _.defaults({
+    forceGraph: isVR ? forceGraphVR : forceGraph3D
+  }, state)
+  draw(state)
 
   if (isVR) {
     document.getElementById('graph-3d').style.display = 'none'
@@ -137,19 +158,9 @@ document.getElementById('vr').addEventListener('click', () => {
   }
 })
 
-const urlParams = new URLSearchParams(window.location.search)
-if (urlParams.get('rule')) {
-  rule = ruleFromQuery(urlParams.get('rule'))
-} else {
-  window.history.replaceState('', '', '?rule=' + rule.replace(/\s/g, ''))
-}
-
 window.onpopstate = () => {
-  const urlParams = new URLSearchParams(window.location.search)
-  if (urlParams.get('rule')) {
-    rule = ruleFromQuery(urlParams.get('rule'))
-    draw(forceGraph, rule, steps)
-  }
+  state = _.defaults(initialStateFromQuery(new URLSearchParams(window.location.search)), state)
+  draw(state)
 }
 
 window.addEventListener('resize', _.debounce(() => {
@@ -159,4 +170,10 @@ window.addEventListener('resize', _.debounce(() => {
   forceGraphVR.width(window.innerWidth)
 }, 100))
 
-draw(forceGraph, rule, steps)
+let state = _.defaults(initialStateFromQuery(new URLSearchParams(window.location.search)), {
+  rule: randomRule(),
+  steps: 6,
+  forceGraph: forceGraph3D
+})
+window.history.replaceState('', '', stateToQueryString(state))
+draw(state)

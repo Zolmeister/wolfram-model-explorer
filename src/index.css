@@ -47,8 +47,7 @@ body {
   background: rgba(255, 255, 255, 0.15);
 }
 
-#rule {
-  position: absolute;
+#rule, #init {
   white-space: nowrap;
   margin-top: 12px;
   padding: 6px 24px;
