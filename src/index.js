@@ -35,6 +35,8 @@ const createForceGraph = (isVR) =>
     .linkColor(() => '#E1F5FE')
     .linkDirectionalArrowLength(4)
     .linkDirectionalArrowRelPos(1)
+    .linkCurvature('curvature')
+    .linkCurveRotation('rotation')
 
 const forceGraph3D = createForceGraph(false)
 const forceGraphVR = createForceGraph(true)
@@ -45,23 +47,60 @@ const draw = (forceGraph, rule, steps) => {
   const initialSet = model.matchTuples.map(tuple => Tuple(tuple.map(() => 1)))
   const set = evolve(model, initialSet, steps)
 
+  const links = set.map((tuple) => {
+    const links = []
+    let i = tuple.length - 1
+    while (i--) {
+      links.push({
+        source: tuple[i],
+        target: tuple[i + 1],
+        isHyperedge: tuple.length > 2
+      })
+    }
+    return links
+  }).flat()
+
   const gData = {
     nodes: _.uniq(set.flat()).map((id) => ({id})),
-    links: set.map((tuple) => {
-      const links = []
-      let i = tuple.length - 1
-      while (i--) {
-        links.push({source: tuple[i], target: tuple[i + 1]})
+    links: links.map((link, i) => {
+      let overlapTotal = 0
+      let overlapIndex = 0
+      const isSelfLoop = link.source === link.target
+
+      for (const [j, overlapLink] of links.entries()) {
+        if (overlapLink === link) continue
+
+        const isSame = link.source === overlapLink.source && link.target === overlapLink.target
+        const isInverted = link.source === overlapLink.target && link.target === overlapLink.source
+        const isOverlapping = isSame || isInverted
+
+        if (isOverlapping) {
+          overlapTotal += 1
+          if (i > j) {
+            overlapIndex += 1
+          }
+        }
       }
-      return links
-    }).flat()
+
+      const rotationFrameAdjust = (rotation) =>
+        rotation * (link.source > link.target ? -1 : 1) +
+          (link.source > link.target ? Math.PI : 0)
+
+      return {
+        source: link.source,
+        target: link.target,
+        curvature: isSelfLoop ? 0.3 :
+          link.isHyperedge ? 0 :
+            overlapTotal > 0 ? 0.2 : 0,
+        rotation: rotationFrameAdjust(Math.PI * 2 * (overlapIndex + 1) / (overlapTotal + 1)),
+        isHyperedge: link.isHyperedge
+      }
+    })
   }
 
   console.log('set', set)
   console.log('gData', gData)
 
-  // TODO: show self-loops
-  // TODO: show duplicate edges
   // TODO: show hyperedges
   forceGraph
     .graphData(gData)
