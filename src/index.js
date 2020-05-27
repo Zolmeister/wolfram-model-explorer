@@ -3,9 +3,11 @@ import ForceGraph3D from '3d-force-graph'
 import ForceGraphVR from '3d-force-graph-vr'
 
 // import {Model, Tuple, evolve} from './set_replace'
-import {Tuple, listFromStr, modelFromStr, listToString, ruleFromStr} from './primitives'
+import {listFromStr, modelFromRule, listToString, initialListFromRule, ruleFromStr} from './primitives'
 import {evolve} from './hyperedge_list'
-import WolframModels from './wolfram_models'
+import _WolframModels from './wolfram_models'
+
+const WolframModels = _.mapValues(_WolframModels, ruleFromStr)
 
 import './index.css'
 
@@ -13,7 +15,7 @@ import './index.css'
 // TODO: support single-element models like 225, 833
 const codes = Object.keys(WolframModels).filter(code => {
   try {
-    modelFromStr(WolframModels[code])
+    modelFromRule(WolframModels[code])
     return true
   } catch {
     return false
@@ -24,10 +26,6 @@ const randomRule = () =>
   WolframModels[codes[Math.floor(Math.random() * (codes.length - 1))]]
 
 const ruleToCode = _.invert(WolframModels)
-
-// {1, 2, 3} -> {1, 1, 1}
-const initialListFromRule = (rule) =>
-  modelFromStr(rule).matchTuples.map(tuple => Tuple(tuple.map(() => 1)))
 
 const initialStateFromQuery = (urlParams) =>
   ({
@@ -57,7 +55,7 @@ const forceGraphVR = createForceGraph(ForceGraphVR, 'graph-vr')
 // TODO: show hyperedges
 const draw = ({rule, initialList, steps, forceGraph}) => {
   initialList = initialList ? initialList : initialListFromRule(rule)
-  const set = evolve(modelFromStr(rule), initialList, steps - 1)
+  const set = evolve(modelFromRule(rule), initialList, steps - 1)
 
   const links = set.map((tuple) => {
     const links = []

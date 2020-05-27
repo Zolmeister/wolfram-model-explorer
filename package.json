@@ -21,6 +21,7 @@
   "dependencies": {
     "3d-force-graph": "^1.63.0",
     "3d-force-graph-vr": "^1.33.0",
-    "fast-json-stable-stringify": "^2.1.0"
+    "fast-json-stable-stringify": "^2.1.0",
+    "lodash": "^4.17.15"
   }
 }

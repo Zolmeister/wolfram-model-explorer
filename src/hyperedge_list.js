@@ -39,7 +39,7 @@ export const match = (set, pattern) => {
       )
 
       const newSet = set.slice()
-      newSet.splice(set.indexOf(setTuple), 1)
+      newSet.splice(newSet.indexOf(setTuple), 1)
       const nextMatch = match(newSet, nextPattern)
       if (nextMatch) {
         return nextMatch
@@ -59,7 +59,7 @@ export const matchAll = (set, pattern) => {
       results.push(matched)
       const newSet = set.slice()
       for (const setTuple of matched) {
-        newSet.splice(set.indexOf(setTuple), 1)
+        newSet.splice(newSet.indexOf(setTuple), 1)
       }
       set = newSet
     } else {
@@ -75,9 +75,9 @@ export const replace = (set, match, model) => {
   let nextId = _.max(set.flat()) + 1
   const replacementMap = Object.fromEntries(_.zip(model.matchTuples.flat(), match.flat()))
   const replacementTuples = model.replacementTuples.map(tuple =>
-    tuple.map(x =>
+    Tuple(tuple.map(x =>
       replacementMap[x] ? replacementMap[x] : replacementMap[x] = nextId++
-    )
+    ))
   )
 
   const newSet = set.slice()

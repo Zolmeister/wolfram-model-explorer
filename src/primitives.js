@@ -16,6 +16,10 @@ export const listToString = (list) =>
     .replace(/\s/g, '')
     .replace(/,/g, ', ')
 
+// {1, 2, 3} -> {1, 1, 1}
+export const initialListFromRule = (rule) =>
+  modelFromRule(rule).matchTuples.map(tuple => Tuple(tuple.map(() => 1)))
+
 export const ruleFromStr = (str) =>
   str.replace(/\s/g, '')
     .replace(/,/g, ', ')
@@ -25,7 +29,7 @@ export const ruleFromStr = (str) =>
 
 //   TODO: sort matchTuples by most-valuable match first
 //     e.g. [(-1, -2), (-2, -3), (-2, -2)] -> [(-2, -3), (-1, -2), (-2, -2)]
-export const modelFromStr = (str) => {
+export const modelFromRule = (str) => {
   const parsed = JSON.parse(str.replace(/{/g, '[').replace(/}/g, ']').replace(/->/g, ','))
     .map(sets =>
       sets.map(tuple =>
