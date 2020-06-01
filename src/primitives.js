@@ -24,8 +24,9 @@ export const ruleFromStr = (str) =>
   str.replace(/\s/g, '')
     .replace(/,/g, ', ')
     .replace(/->/g, ' -> ')
-    .replace(/^{{(?!{)/g, '{{{')
-    .replace(/(?<!})}}$/g, '}}}')
+    .replace(/^{{(?!{)/, '{{{')
+    .replace(/([^}])}}$/, '$1}}}')
+    // .replace(/(?<!})}}$/g, '}}}')
 
 //   TODO: sort matchTuples by most-valuable match first
 //     e.g. [(-1, -2), (-2, -3), (-2, -2)] -> [(-2, -3), (-1, -2), (-2, -2)]
