@@ -11,6 +11,10 @@ const WolframModels = _.mapValues(_WolframModels, ruleFromStr)
 
 import './index.css'
 
+// XXX
+document.getElementById('loading').style.display = 'none'
+document.getElementById('root').style.display = 'block'
+
 // TODO: support multi-pattern models like 1695, 4967
 // TODO: support single-element models like 225, 833
 const codes = Object.keys(WolframModels).filter(code => {
