@@ -58,6 +58,8 @@ const forceGraphVR = createForceGraph(ForceGraphVR, 'graph-vr')
 
 // TODO: show hyperedges
 const draw = ({rule, initialList, steps, forceGraph}) => {
+  document.getElementById('loading').style.display = 'block'
+
   initialList = initialList ? initialList : initialListFromRule(rule)
   const set = evolve(modelFromRule(rule), initialList, steps - 1)
 
@@ -115,8 +117,28 @@ const draw = ({rule, initialList, steps, forceGraph}) => {
   console.log('set', set)
   console.log('gData', gData)
 
+  const isLarge = gData.nodes.length > 1000
+  const warmupTicks = isLarge ? Math.sqrt(gData.nodes.length) * 4 : 0
+  let isWarmedUp = false
+  let ticks = 0
   forceGraph
+    .nodeResolution(isLarge ? 1 : 8)
+    .linkDirectionalArrowResolution(isLarge ? 2 : 4)
+    .cooldownTime(5000)
+    .d3AlphaDecay(1 / Math.pow(gData.nodes.length, 0.5) / 10)
+    .d3VelocityDecay(1 / Math.pow(gData.nodes.length, 0.5))
     .graphData(gData)
+    .warmupTicks(warmupTicks)
+    .onEngineTick(() => {
+      if (!isWarmedUp) {
+        isWarmedUp = true
+        document.getElementById('loading').style.display = 'none'
+      }
+      if (ticks === 10) {
+        forceGraph.zoomToFit(500, 1)
+      }
+      ticks += 1
+    })
 
   document.getElementById('code').innerText = ruleToCode[rule]
   document.getElementById('code').style.display = ruleToCode[rule] ? 'block' : 'none'
