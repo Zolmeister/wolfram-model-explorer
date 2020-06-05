@@ -118,23 +118,31 @@ const draw = ({rule, initialList, steps, forceGraph}) => {
   console.log('gData', gData)
 
   const isLarge = gData.nodes.length > 1000
-  const warmupTicks = isLarge ? Math.sqrt(gData.nodes.length) * 4 : 0
+  const warmupTicks = isLarge ? Math.pow(gData.nodes.length, 0.7) * 4 : 0
   let isWarmedUp = false
   let ticks = 0
-  forceGraph
-    .nodeResolution(isLarge ? 1 : 8)
+  // FIXME: hacked forcegraph ngraph physics
+  // https://github.com/vasturiano/3d-force-graph/issues/332
+  // {
+  //  theta: 0.9,
+  //  dragCoeff: 0.02 / 10
+  // }
+  ;(isLarge ?
+    forceGraph.forceEngine('ngraph') :
+    forceGraph.forceEngine('d3')
+      .d3AlphaDecay(1 / Math.pow(gData.nodes.length, 0.5) / 10)
+      .d3VelocityDecay(1 / Math.pow(gData.nodes.length, 0.5))
+  ).nodeResolution(isLarge ? 1 : 8)
     .linkDirectionalArrowResolution(isLarge ? 2 : 4)
     .cooldownTime(5000)
-    .d3AlphaDecay(1 / Math.pow(gData.nodes.length, 0.5) / 10)
-    .d3VelocityDecay(1 / Math.pow(gData.nodes.length, 0.5))
-    .graphData(gData)
     .warmupTicks(warmupTicks)
+    .graphData(gData)
     .onEngineTick(() => {
       if (!isWarmedUp) {
         isWarmedUp = true
         document.getElementById('loading').style.display = 'none'
       }
-      if (ticks === 10) {
+      if (ticks === 50) {
         forceGraph.zoomToFit(500, 1)
       }
       ticks += 1
