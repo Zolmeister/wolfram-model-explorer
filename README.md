@@ -10,3 +10,5 @@ Limitations
   - single-element models not supported
     - e.g. `{{{1}} -> {{1, 2}, {2}, {2}}}`
   - hyperedges not visualized
+
+[xkcd 505](https://xkcd.com/505/)
